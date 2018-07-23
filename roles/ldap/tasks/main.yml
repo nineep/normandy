@@ -17,6 +17,7 @@
     - openldap-servers
     - openldap-devel
     - openldap-clients
+    - compat-openldap
     - automake
     - pam-devel
     - libtool
@@ -36,6 +37,11 @@
   template:
     src: DB_CONFIG.example.j2
     dest: /var/lib/ldap/DB_CONFIG
+
+- name: Chown /var/lib/ldap/
+  shell: "chown ldap:ldap -R /var/lib/ldap/"
+  args:
+    warn: False
 
 - name: Config OpenLDAP pam auth with pam_unix and pam_google_authenticator
   template:
