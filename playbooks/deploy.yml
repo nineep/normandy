@@ -1,0 +1,15 @@
+---
+- name: deploy and config portal
+  hosts: portal
+  roles:
+    - portal
+
+- name: Add user to servers of develop father group
+  hosts: develop
+  roles:
+    - sudo
+
+- name: Add user to servers of product father group
+  hosts: product
+  roles:
+    - sudo

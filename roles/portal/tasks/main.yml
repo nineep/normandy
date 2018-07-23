@@ -1,0 +1,35 @@
+---
+# tasks file for portal
+
+- name: Install relevent packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - epel-release
+    - pam_radius
+
+- name: Ensure only root can su to other users
+  template:
+    src: su.j2
+    dest: /etc/pam.d/su
+
+- name: Config ssh with pam_radius
+  template:
+    src: sudo.j2
+    dest: /etc/pam.d/sudo
+
+- name: Config pam_radius
+  template:
+    src: pam_radius.conf.j2
+    dest: /etc/pam_radius.conf
+
+- name: Loopup user on ldap
+  shell: "ldapsearch -x -LLL -b  ou=People,dc=polex,dc=io  -h ip | grep cn | grep -v mail | sed 's/cn: //g'"
+  register: ldap_search_user_result
+
+- name: Create user on portal
+  user:
+    name: "{{ item }}"
+    generate_ssh_key: yes
+  with_items: "{{ ldap_search_user_result.stdout_lines }}"

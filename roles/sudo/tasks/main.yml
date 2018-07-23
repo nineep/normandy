@@ -1,0 +1,26 @@
+---
+# tasks file for sudo
+
+- name: Config sudoer file
+  template:
+    src: alias.j2
+    dest: /etc/sudoers.d/alias
+
+- name: Create user on server
+  user:
+    name: "{{ item }}"
+  with_items: "{{ registered_users }}"
+
+- name: Push registered users' public key to server
+  authorized_key:
+    user: "{{ item }}"
+    key: "{{ lookup('file', '/home/{{ item }}/.ssh/id_rsa.pub') }}"
+  with_items: "{{ registered_users }}"
+
+- name: Remove other other key from ssh authorized_key
+  authorized_key:
+    user: root
+    key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+    state: present
+    exclusive: True
+

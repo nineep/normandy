@@ -1,0 +1,18 @@
+# 用户别名
+User_Alias ADMINS = 
+{%- for user in allowed_users -%}
+    {%- if loop.last -%}
+        {{ user }}
+    {%- else -%}
+        {{ user }},
+    {%- endif -%}
+{%- endfor %}
+
+User_Alias COMMON = test
+
+# 命令别名
+Cmnd_Alias COMMON = /usr/bin/ls, /usr/bin/cat, /usr/bin/view
+
+# 允许ADMINS组用户执行以下ADMINS组命令
+ADMINS       ALL=(ALL)       NOPASSWD: ALL
+COMMON       ALL=(ALL)       NOPASSWD: COMMON
