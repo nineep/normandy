@@ -1,0 +1,23 @@
+---
+# tasks file for ntp
+
+- name: Install ntp relevent packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - ntp
+    - ntpdate
+    - ntp-doc
+
+- name: Start ntp service
+  service:
+    name: ntpd
+    state: started
+    enabled: yes
+
+- name: Configure ntpd service
+  template:
+    src: ntp.conf.j2
+    dest: /etc/ntp.conf
+  notify: restart ntp

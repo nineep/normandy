@@ -1,0 +1,32 @@
+---
+
+- name: Add sasltest user
+  user:
+    name: sasltest
+    # clear-text password is sasltest
+    password: '$6$jXhlsllj$PdnqGqZmQFyS74d3yA8seOG7JX.eBl964d.xWeKQfsPRjcW9X4PqaZUQcvzqjH4NMtoQI7NkqaHuAmsO3L9MG0'
+
+- name: Genarate sasltest' google auth key
+  #become: yes
+  #become_user: sasltest
+  #shell: google-authenticator -t -d -f -r 1 -R 15 -w 3
+  shell: su sasltest -c "google-authenticator -t -d -f -r 1 -R 15 -w 3"
+  args:
+    warn: False
+
+- name: Obtain google auth key
+  shell: cat /home/sasltest/.google_authenticator  | head -1
+  register: google_auth_key
+
+- name: Generate the password based on the key
+  shell: oathtool --totp --base32 -d6 {{ google_auth_key.stdout }}
+  register: google_auth_password
+
+- name: Identify password genarated by google auth key
+  shell: testsaslauthd  -s ldap -u sasltest -p sasltest{{ google_auth_password.stdout }}
+
+- name: Delete test user
+  user:
+    name: sasltest
+    state: absent
+    remove: yes

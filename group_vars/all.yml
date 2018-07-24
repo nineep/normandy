@@ -1,0 +1,5 @@
+---
+
+# NTP service setup
+upstream_ntp_servers:
+  - "10.70.239.196 perfer"

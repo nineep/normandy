@@ -1,0 +1,76 @@
+---
+#Install and config OpenLDAP + sasl + google_authenticator
+
+- name: Install cyrus-sasl and OpenLDAP
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - epel-release
+    - cyrus-sasl
+    - cyrus-sasl-plain
+    - cyrus-sasl-lib
+    - cyrus-sasl-devel
+    - oathtool
+    - gcc
+    - autoconf
+    - openldap-servers
+    - openldap-devel
+    - openldap-clients
+    - compat-openldap
+    - automake
+    - pam-devel
+    - libtool
+    - libtool-ltdl
+
+- name: Install google_authenticator
+  yum:
+    name: google-authenticator
+    state: latest
+
+- name: Config saslauthd
+  template:
+    src: saslauthd.j2
+    dest: /etc/sysconfig/saslauthd
+
+- name: Config OpenLDAP DB
+  template:
+    src: DB_CONFIG.example.j2
+    dest: /var/lib/ldap/DB_CONFIG
+    owner: ldap
+    group: ldap
+
+    #- name: Chown /var/lib/ldap/
+    #  shell: "chown ldap:ldap -R /var/lib/ldap/"
+    #  args:
+    #    warn: False
+
+- name: Config OpenLDAP pam auth with pam_unix and pam_google_authenticator
+  template:
+    src: ldap.j2
+    dest: /etc/pam.d/ldap
+
+- name: Config OpenLDAP use sasl to check passwd
+  template:
+    src: slapd.conf.j2
+    dest: /etc/sasl2/slapd.conf
+
+- name: Strat saslauthd service
+  service:
+    name: saslauthd
+    state: started
+    enabled: yes
+
+- name: Start OpenLDAP server daemon
+  service:
+    name: slapd
+    state: started
+    enabled: yes
+
+- name: Config pam auth debug log with rsyslog
+  template:
+    src: pam.conf.j2
+    dest: /etc/rsyslog.d/pam.conf
+  notify: restart rsyslog
+
+
