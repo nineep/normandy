@@ -1,6 +1,6 @@
 ---
 
-- include: install_environment.yml
+- include: install_env.yml
   tags:
     - install
 - include: test_saslauthd.yml

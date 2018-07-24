@@ -1,0 +1,23 @@
+dn: uid=test,ou=People,{{ openldap_basedn }}
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: test
+sn: test
+givenName: test
+displayName: test
+uid: test
+uidNumber: 10019
+gidNumber: 5002
+homeDirectory: /home/test
+loginShell: /bin/bash
+gecos: test
+userPassword: {SASL}test@ci
+description: User account
+mail: test@mail.com
+
+dn: cn=devops,ou=Group,{{ openldap_basedn }}
+objectClass: posixGroup
+gidNumber: 5002
+cn: devops
+

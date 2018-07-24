@@ -24,8 +24,8 @@
     src: pam_radius.conf.j2
     dest: /etc/pam_radius.conf
 
-- name: Loopup user on ldap
-  shell: "ldapsearch -x -LLL -b  ou=People,dc=polex,dc=io  -h ip | grep cn | grep -v mail | sed 's/cn: //g'"
+- name: Lookup user on ldap
+  shell: "ldapsearch -x -LLL -b  ou=People,{{ openldap_basedn }}  -h ip | grep cn | grep -v mail | sed 's/cn: //g'"
   register: ldap_search_user_result
 
 - name: Create user on portal

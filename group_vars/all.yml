@@ -3,3 +3,10 @@
 # NTP service setup
 upstream_ntp_servers:
   - "10.70.239.196 perfer"
+
+# OpenLDAP configuration
+#
+openldap_root_password: 1dappassw0rd 
+openldap_basedn: "dc=example,dc=com"
+openldap_rootdn: "cn=root,dc=example,dc=com"
+openldap_dc_leaf: example

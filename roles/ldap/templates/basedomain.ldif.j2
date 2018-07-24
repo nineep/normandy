@@ -1,0 +1,20 @@
+dn: {{ openldap_basedn }}
+objectClass: top
+objectClass: dcObject
+objectclass: organization
+o: base ou
+dc: {{ openldap_dc_leaf }}
+
+dn: {{ openldap_rootdn }}
+objectClass: organizationalRole
+cn: Manager
+description: Directory Root
+
+dn: ou=People,{{ openldap_basedn }}
+objectClass: organizationalUnit
+ou: People
+
+dn: ou=Group,{{ openldap_basedn }}
+objectClass: organizationalUnit
+ou: Group
+
