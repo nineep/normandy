@@ -48,12 +48,12 @@
 
 - name: Config OpenLDAP pam auth with pam_unix and pam_google_authenticator
   template:
-    src: ldap.j2
+    src: pam_ldap.j2
     dest: /etc/pam.d/ldap
 
 - name: Config OpenLDAP use sasl to check passwd
   template:
-    src: slapd.conf.j2
+    src: sasl_slapd.conf.j2
     dest: /etc/sasl2/slapd.conf
 
 - name: Strat saslauthd service

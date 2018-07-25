@@ -4,83 +4,123 @@
   shell: slappasswd -s {{ openldap_root_password }}
   register: openldap_rootpw_sha
 
-- name:  Add olcRootPW to config.ldif
-    ldap_attr:
-      dn: olcDatabase={0}config,cn=config
-      name: olcRootPW
-      values: "{{ openldap_rootpw_sha.stdout }}"
-      state: present
+  #- name:  Add olcRootPW to config.ldif
+  #  ldap_attr:
+  #    dn: olcDatabase={0}config,cn=config
+  #    name: olcRootPW
+  #    values: "{{ openldap_rootpw_sha.stdout }}"
+  #    state: present
 
-- name: Change olcSuffix value of monitor.ldif
-  ldap_attr:
-    dn: olcDatabase={1}monitor,cn=config
-    name: olcAccess
-    values:
-      - >-
-        {0}to *
-        by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" read 
-        by dn.base= "{{ openldap_rootdn }}" read 
-        by * none
-    state: exact
+- name: Create /etc/openldap/init_ldif dir
+  file:
+    path: /etc/openldap/init_ldif
+    state: directory
 
-- name: Change olcSuffix and olcRootDN values of hdb.ldif
-  ldap_attr:
-    dn: olcDatabase={2}hdb,cn=config
-    name: "{{ item.key }}"
-    values: "{{ item.value }}"
-    state: exact
-  with_dict:
-    olcSuffix: "{{ openldap_basedn }}"
-    olcRootDN: "{{ openldap_rootdn }}"
+- name: Copy chrootpw.ldif
+  template:
+    src: chrootpw.ldif.j2
+    dest: /etc/openldap/init_ldif/chrootpw.ldif
+    
+- name: Add olcRootPW to config.ldif
+  shell: "ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/openldap/init_ldif/chrootpw.ldif"
+  ignore_errors: yes
 
-- name: Add olcRootPW to hdb.ldif
-  ldap_attr:
-    dn: olcDatabase={2}hdb,cn=config
-    name: olcRootPW
-    values: "{{ openldap_rootpw_sha.stdout }}"
-    state: present
+  #- name: Change olcSuffix value of monitor.ldif
+  #  ldap_attr:
+  #    dn: olcDatabase={1}monitor,cn=config
+  #    name: olcAccess
+  #    values:
+  #      - >-
+  #        {0}to *
+  #        by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" read
+  #        by dn.base= "{{ openldap_rootdn }}" read
+  #        by * none
+  #    state: exact
+  #
+  #- name: Change olcSuffix and olcRootDN values of hdb.ldif
+  #  ldap_attr:
+  #    dn: olcDatabase={2}hdb,cn=config
+  #    name: "{{ item.key }}"
+  #    values: "{{ item.value }}"
+  #    state: exact
+  #  with_dict:
+  #    olcSuffix: "{{ openldap_basedn }}"
+  #    olcRootDN: "{{ openldap_rootdn }}"
+  #
+  #- name: Add olcRootPW to hdb.ldif
+  #  ldap_attr:
+  #    dn: olcDatabase={2}hdb,cn=config
+  #    name: olcRootPW
+  #    values: "{{ openldap_rootpw_sha.stdout }}"
+  #    state: present
+  #
+  #- name: Add olcAccess to hdb.ldif
+  #  ldap_attr:
+  #    dn: olcDatabase={2}hdb,cn=config
+  #    name: olcAccess
+  #    values:
+  #      - >-
+  #        {0}to attrs=userPassword,shadowLastChange
+  #        by dn= "{{ openldap_rootdn }}" write
+  #        by anonymous auth
+  #        by self write
+  #        by * none
+  #      - >-
+  #        {1}to dn.base= "{{ openldap_basedn }}"
+  #        by dn= "{{ openldap_rootdn }}" write
+  #        by * read
+  #      - >-
+  #        {2}to *
+  #        by dn= "{{ openldap_rootdn }}" write
+  #        by * read
+  #    state: present
 
-- name: Add olcAccess to hdb.ldif
-  ldap_attr:
-    dn: olcDatabase={2}hdb,cn=config
-    name: olcAccess
-    values:
-      - >-
-        {0}to attrs=userPassword,shadowLastChange
-        by dn= "{{ openldap_rootdn }}" write
-        by anonymous auth
-        by self write
-        by * none
-      - >-
-        {1}to dn.base= "{{ openldap_basedn }}"
-        by dn= "{{ openldap_rootdn }}" write
-        by * read
-      - >-
-        {2}to *
-        by dn= "{{ openldap_rootdn }}" write
-        by * read
-    state: present
+- name: Copy set_privilege.ldif.j2
+  template:
+    src: set_privilege.ldif.j2
+    dest: /etc/openldap/init_ldif/set_privilege.ldif
+  tags:
+    - set_privilege
+
+- name: Set and modify root privilege
+  shell: "ldapmodify -Y EXTERNAL -H ldapi:/// -f /etc/openldap/init_ldif/set_privilege.ldif"
+   tags:
+    - set_privilege
 
 - name: Import schemas
-  command: "ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/{{ item }}"
+  shell: "ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/{{ item }}"
   with_items:
     - cosine.ldif
     - nis.ldif
     - inetorgperson.ldif
+  tags:
+    - schema
 
 - name: Copy basedomain.ldif file
   template:
     src: basedomain.ldif.j2
-    dest: /etc/openldap/basedomain.ldif
+    dest: /etc/openldap/init_ldif/basedomain.ldif
+  tags:
+    - basedomain
 
 - name: Create dc and ou
-  shell: ldapadd -x -D "{{ openldap_rootdn }}" -w "{{ openldap_root_password }}" -f /etc/openldap/basedomain.ldif
+  shell: ldapadd -x -D "{{ openldap_rootdn }}" -w "{{ openldap_root_password }}" -f /etc/openldap/init_ldif/basedomain.ldif
+  tags:
+    - basedomain
 
 - name: Copy user_group.ldif file
   template:
     src: user_group.ldif.j2
-    dest: /etc/openldap/user_group.ldif
-    
+    dest: /etc/openldap/init_ldif/user_group.ldif
+  tags:
+    - user_group
+   
 - name: Create group and user
-  shell: ldapadd -x -D "{{ openldap_rootdn }}" -w "{{ openldap_root_password }}" -f /etc/openldap/user_group.ldif
+  shell: ldapadd -x -D "{{ openldap_rootdn }}" -w "{{ openldap_root_password }}" -f /etc/openldap/init_ldif/user_group.ldif
+  tags:
+    - user_group
 
+- name: Restart slapd
+  service:
+    name: slapd
+    state: restarted

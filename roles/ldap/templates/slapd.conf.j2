@@ -1,2 +1,61 @@
-pwcheck_method: saslauthd
-mech_list: plain login
+include /etc/openldap/schema/core.schema
+include /etc/openldap/schema/cosine.schema
+include /etc/openldap/schema/inetorgperson.schema
+include /etc/openldap/schema/nis.schema
+include /etc/openldap/schema/misc.schema
+ 
+pidfile  /var/run/openldap/slapd.pid
+argsfile /var/run/openldap/slapd.args
+ 
+## ## ServerID used in case of replication
+serverID 0 
+loglevel 0
+ 
+## ## Certificate/SSL Section
+TLSCipherSuite normal
+TLSCACertificateFile /etc/openldap/ssl/ldap.crt
+TLSCertificateFile /etc/openldap/ssl/ldap.pem
+TLSCertificateKeyFile /etc/openldap/ssl/ldap.key
+TLSVerifyClient never
+ 
+## ## Access Controls
+access to dn.base="" by * read
+access to dn.base="cn=Subschema" by * read
+access to *
+  by self write
+  by users read
+  by anonymous read
+ 
+## ## Database definition
+database mdb
+suffix "dc=genfic,dc=org"
+checkpoint 32 30
+maxsize 10485760
+#Note: It is important to set this to as large a value as possible,
+#(relative to anticipated growth of the actual data over time)
+#since growing the size later may not be practical when the system is under heavy load.
+ 
+rootdn "cn=Manager,dc=genfic,dc=org"
+## ## rootpwd generated earlier via slappasswd command
+rootpw "{SSHA}EzP6I82DZRnW+ou6lyiXHGxSpSOw2XO4" 
+directory "/var/lib/openldap-data"
+index objectClass eq
+ 
+## ## Synchronisation (pull from other LDAP server)
+syncrepl rid=000
+  provider=ldap://ldap2.genfic.org
+  type=refreshAndPersist
+  retry="5 5 300 +"
+  searchbase="dc=genfic,dc=org"
+  attrs="*,+"
+  bindmethod="simple"
+  binddn="cn=ldapreader,dc=genfic,dc=org"
+  credentials="ldapsyncpass"
+ 
+index entryCSN eq
+index entryUUID eq
+ 
+mirrormode TRUE
+ 
+overlay syncprov
+syncprov-checkpoint 100 10
