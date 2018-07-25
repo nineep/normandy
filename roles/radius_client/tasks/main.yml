@@ -1,0 +1,17 @@
+---
+# tasks file for radius_client
+
+- name: Install pam_radius module
+  yum:
+    name: pam_radius
+    state: present
+
+- name: Config sshd pam confguration file
+  copy:
+    src: sshd
+    dest: /etc/pam.d/sshd
+
+- name: Restart sshd
+  service:
+    name: sshd
+    state: restarted

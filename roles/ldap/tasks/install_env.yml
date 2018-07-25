@@ -14,15 +14,17 @@
     - oathtool
     - gcc
     - autoconf
+    - automake
     - openldap-servers
     - openldap-devel
     - openldap-clients
     - compat-openldap
     - automake
-    - pam-devel
     - libtool
     - libtool-ltdl
     - python-ldap
+    - pam-devel
+    - pam_radius
 
 - name: Install google_authenticator
   yum:

@@ -1,0 +1,42 @@
+---
+# tasks file for radiusd
+
+- name: Install freeradius
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - freeradius
+    - freeradius-utils
+    - freeradius-devel
+
+- name: Config radiusd pam module configuration file
+  copy:
+    src: radiusd
+    dest: /etc/pam.d/radiusd
+
+- name: Config radiusd configuration file
+  template:
+    src: radiusd.conf.j2
+    dest: /etc/raddb/radiusd.conf
+
+- name: Config radius client configuration file
+  template:
+    src: clients.conf.j2
+    dest: /etc/raddb/clients.conf
+
+- name: Enable pam auth and confg passwd,ip
+  template:
+    src: "{{ item.keys }}"
+    dest: "{{ item.values }}"
+  with_dict:
+    authorize.j2: /etc/raddb/mods-config/files/authorize
+    default.j2: /etc/raddb/sites-available/default
+    inner-tunnel.j2: /etc/raddb/sites-available/inner-tunnel
+
+- name: Start radiusd
+  servce:
+    name: radusd
+    state: restarted
+
+ 
