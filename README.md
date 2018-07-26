@@ -1,5 +1,5 @@
 # normandy
-Ansible -> (OpenLDAP + saslauth + google_authenticator + portal)
+Ansible -> {(OpenLDAP + saslauth + google_authenticator) + radiusd  + portal}
 
 # 简介
 一个由Ansible部署的简便的 CentOS7.2 server CLI 用户登录认证小系统
@@ -12,6 +12,9 @@ Ansible -> (OpenLDAP + saslauth + google_authenticator + portal)
 # 说明
 ## OpenLDAP + saslauth + google_authenticator 节点：
 配置username和email，生成用户密码，验证用户登录
+
+## radiusd节点：
+静态+动态密码双因子认证
 
 ## portal节点:
 根据在ldap注册的用户，创建相应user，并把user的公钥push到各个服务器;
